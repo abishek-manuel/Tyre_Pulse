@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Owners | Admin - Tyre Pulse</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="style.css" rel="stylesheet">
+    <script src="js/theme.js"></script>
+</head>
+
+<body>
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar d-none d-md-block">
+                <h4 class="d-flex align-items-center">
+                    <i class="bi bi-vinyl-fill text-danger me-2"></i>Tyre Pulse
+                    <span class="badge bg-danger ms-2 rounded-pill"
+                        style="font-size: 0.45em; letter-spacing: 1px;">ADMIN</span>
+                </h4>
+                <div class="mt-4">
+                    <a href="admin.html"><i class="bi bi-speedometer2"></i> Overview</a>
+                    <a href="admin-users.html"><i class="bi bi-people"></i> Manage Users</a>
+                    <a href="admin-owners.html" class="active"><i class="bi bi-shop"></i> Manage Owners</a>
+                    <a href="admin-blogs.html"><i class="bi bi-journal-text"></i> Manage Blogs</a>
+                    <a href="admin-offers.html"><i class="bi bi-tag"></i> Manage Offers</a>
+                </div>
+
+                <div style="position: absolute; bottom: 30px; width: 100%;">
+                    <a href="#" onclick="window.toggleTheme(event)"><i class="bi bi-moon-fill theme-icon"></i> Toggle Theme</a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="bi bi-key"></i> Change Password</a>
+                    <a href="dashboard.html"><i class="bi bi-arrow-left-circle"></i> Back to User App</a>
+                    <a href="login.html"
+                        onclick="sessionStorage.removeItem('isAdmin'); window.authService?.logout();"><i
+                            class="bi bi-box-arrow-right"></i> Logout</a>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4 p-lg-5 fade-in-up">
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <div>
+                        <h2 class="section-title mb-1">Shop Owner Management 🏪</h2>
+                        <p class="text-muted mb-0">View and manage all registered tyre shop owners on the platform.</p>
+                    </div>
+                    <button class="btn btn-outline-secondary rounded-pill px-4" onclick="loadOwnersList()">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+                    </button>
+                </div>
+
+                <!-- Stats row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm p-4 hover-lift">
+                            <h6 class="text-muted fw-bold text-uppercase small">Total Shop Owners</h6>
+                            <h2 class="fw-bold text-dark m-0 mt-2" id="statTotalOwners">—</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm p-4 hover-lift">
+                            <h6 class="text-muted fw-bold text-uppercase small">Shops with Location</h6>
+                            <h2 class="fw-bold text-dark m-0 mt-2" id="statWithLocation">—</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm p-4 hover-lift">
+                            <h6 class="text-muted fw-bold text-uppercase small">Shops with Phone</h6>
+                            <h2 class="fw-bold text-dark m-0 mt-2" id="statWithPhone">—</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Owners Table -->
+                <div class="card border-0 shadow-sm p-4">
+                    <h5 class="fw-bold mb-4 text-dark">
+                        <i class="bi bi-shop-window text-primary me-2"></i>Registered Shop Owners
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-secondary small fw-bold text-uppercase">Shop</th>
+                                    <th class="text-secondary small fw-bold text-uppercase">Owner Account</th>
+                                    <th class="text-secondary small fw-bold text-uppercase">Location</th>
+                                    <th class="text-secondary small fw-bold text-uppercase">Phone</th>
+                                    <th class="text-secondary small fw-bold text-uppercase text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ownersList">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-5">
+                                        <span class="spinner-border spinner-border-sm me-2"></span>Loading owners...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0 mt-2">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-shield-lock text-primary me-2"></i>Change Password</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-4">Enter a new secure password for your admin account.</p>
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">New Password</label>
+                            <input type="password" id="newPassword" class="form-control bg-light border-0 py-2" required
+                                minlength="6" placeholder="At least 6 characters">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-muted small">Confirm New Password</label>
+                            <input type="password" id="confirmNewPassword" class="form-control bg-light border-0 py-2"
+                                required placeholder="Retype new password">
+                        </div>
+                        <div id="passwordAlertBox" class="alert d-none border-0 rounded-3 small fw-medium mb-0"></div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0 mb-2 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-custom rounded-pill px-4"
+                        onclick="executeChangePassword()" id="changePwdBtn">Update Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- Project Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/db.js?v=2"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 🔐 Auth check
+            if (sessionStorage.getItem('isAdmin') !== 'true' && (!window.authService || !window.authService.isAuthenticated())) {
+                window.location.href = "login.html";
+                return;
+            }
+            loadOwnersList();
+        });
+
+        async function loadOwnersList() {
+            const table = document.getElementById('ownersList');
+            table.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-5"><span class="spinner-border spinner-border-sm me-2"></span>Loading owners...</td></tr>';
+
+            try {
+                const owners = await window.dbService.getOwnersList();
+
+                // Update stats
+                document.getElementById('statTotalOwners').innerText = owners.length;
+                document.getElementById('statWithLocation').innerText = owners.filter(o => o.location).length;
+                document.getElementById('statWithPhone').innerText    = owners.filter(o => o.phone).length;
+
+                if (owners.length === 0) {
+                    table.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-5"><i class="bi bi-shop fs-2 d-block mb-3 opacity-50"></i>No registered shop owners found.</td></tr>';
+                    return;
+                }
+
+                table.innerHTML = '';
+                owners.forEach(o => {
+                    const shortId = 'OWN-' + o.id.substring(0, 6).toUpperCase();
+                    const initials = (o.shopName || 'S').charAt(0).toUpperCase();
+                    table.innerHTML += `
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold"
+                                        style="width:42px;height:42px;font-size:1em;flex-shrink:0;">${initials}</div>
+                                    <div>
+                                        <div class="fw-bold text-body-emphasis">${o.shopName || '(No shop name)'}</div>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 pb-1 small" title="${o.id}">${shortId}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-body-emphasis">${o.displayName}</div>
+                                <small class="text-muted">${o.email}</small>
+                            </td>
+                            <td>
+                                ${o.location
+                                    ? `<span class="text-muted small"><i class="bi bi-geo-alt-fill text-danger me-1"></i>${o.location}</span>`
+                                    : `<span class="text-muted small opacity-50">—</span>`}
+                            </td>
+                            <td>
+                                ${o.phone
+                                    ? `<span class="text-muted small"><i class="bi bi-telephone-fill text-success me-1"></i>${o.phone}</span>`
+                                    : `<span class="text-muted small opacity-50">—</span>`}
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-danger rounded-pill fw-medium px-3"
+                                    onclick="deleteOwnerAction('${o.id}', '${o.shopName}')">
+                                    <i class="bi bi-trash3 me-1"></i>Remove
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+            } catch (err) {
+                console.error(err);
+                table.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Failed to fetch shop owners.</td></tr>';
+            }
+        }
+
+        async function deleteOwnerAction(uid, shopName) {
+            if (confirm(`⚠️ Warning: This will permanently remove the shop profile and account for "${shopName || 'this owner'}". Are you sure?`)) {
+                try {
+                    // Delete their shopProfile subcollection document
+                    await window.dbService.dbInstance
+                        .collection('users').doc(uid)
+                        .collection('shopProfile').doc('profile').delete();
+                    // Delete their user record
+                    await window.dbService.deleteUserAuth(uid);
+                    alert('Shop owner removed successfully.');
+                    loadOwnersList();
+                } catch (e) {
+                    alert('Error removing owner: ' + e.message);
+                }
+            }
+        }
+
+        async function executeChangePassword() {
+            const pwd1 = document.getElementById('newPassword').value;
+            const pwd2 = document.getElementById('confirmNewPassword').value;
+            const alertBox = document.getElementById('passwordAlertBox');
+            const submitBtn = document.getElementById('changePwdBtn');
+
+            alertBox.classList.add('d-none');
+            alertBox.classList.remove('alert-danger', 'alert-success');
+
+            if (pwd1.length < 6) {
+                alertBox.innerText = "Password must be at least 6 characters long.";
+                alertBox.classList.add('alert-danger');
+                alertBox.classList.remove('d-none');
+                return;
+            }
+            if (pwd1 !== pwd2) {
+                alertBox.innerText = "Passwords do not match.";
+                alertBox.classList.add('alert-danger');
+                alertBox.classList.remove('d-none');
+                return;
+            }
+            try {
+                submitBtn.innerText = "Updating...";
+                submitBtn.disabled = true;
+                await window.authService.changePassword(pwd1);
+                alertBox.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Password updated successfully!';
+                alertBox.classList.add('alert-success');
+                alertBox.classList.remove('d-none');
+                document.getElementById('changePasswordForm').reset();
+                setTimeout(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+                    alertBox.classList.add('d-none');
+                    submitBtn.innerText = "Update Password";
+                    submitBtn.disabled = false;
+                }, 2000);
+            } catch (error) {
+                alertBox.innerText = error.message || "Failed to update password.";
+                alertBox.classList.add('alert-danger');
+                alertBox.classList.remove('d-none');
+                submitBtn.innerText = "Update Password";
+                submitBtn.disabled = false;
+            }
+        }
+    </script>
+
+</body>
+
+</html>

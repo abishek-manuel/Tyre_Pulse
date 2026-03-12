@@ -1,0 +1,14 @@
+{
+  "name": "tyre-pulse-functions",
+  "description": "Daily scheduled checks for Tyre wear, alignment, and rotation",
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^11.8.0",
+    "firebase-functions": "^4.3.1",
+    "nodemailer": "^6.9.7"
+  },
+  "private": true
+}

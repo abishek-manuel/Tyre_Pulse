@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Wear Analysis | Tyre Pulse</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+
+    <link href="style.css" rel="stylesheet" />
+    <script src="js/theme.js"></script>
+
+    <style>
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        /* Custom Badges injected by JS */
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 50rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .status-good {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: #198754;
+        }
+
+        .status-moderate {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #d39e00;
+        }
+
+        .status-critical {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <div class="col-md-2 sidebar d-none d-md-block">
+                <h4><i class="bi bi-vinyl-fill text-danger me-2"></i>Tyre Pulse</h4>
+                <div class="mt-4">
+                    <a href="dashboard.html"><i class="bi bi-grid-fill"></i> Dashboard</a>
+                    <a href="tyre-details.html"><i class="bi bi-truck"></i> Tyre Details</a>
+                    <a href="wear-analysis.html" class="active"><i class="bi bi-graph-up-arrow"></i> Wear Analysis</a>
+                    
+                    <a href="blog.html"><i class="bi bi-newspaper"></i> Blogs</a>
+                    <a href="chatbot.html"><i class="bi bi-chat-dots"></i> Chatbot</a>
+                </div>
+                <div style="position: absolute; bottom: 30px; width: 100%;">
+                    <a href="#" onclick="window.toggleTheme(event)"><i class="bi bi-moon-fill theme-icon"></i> Toggle
+                        Theme</a>
+                    <a href="index.html" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                </div>
+            </div>
+
+            <div class="col-md-10 p-4 p-lg-5 fade-in-up">
+
+                <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+                    <div>
+                        <h2 class="section-title mb-1">Wear Analysis 📊</h2>
+                        <p class="text-muted mb-0">Predictive insights based on your driving habits.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-outline-primary rounded-pill fw-medium shadow-sm" data-bs-toggle="modal"
+                            data-bs-target="#rotationModal">
+                            <i class="bi bi-arrow-repeat me-1"></i> Log Tire Rotation
+                        </button>
+                        <button class="btn btn-outline-info rounded-pill fw-medium shadow-sm" data-bs-toggle="modal"
+                            data-bs-target="#alignmentModal">
+                            <i class="bi bi-crosshair me-1"></i> Check Wheel Alignment
+                        </button>
+                        <select id="vehicleSelect"
+                            class="form-select border-0 shadow-sm rounded-pill px-4 w-auto fw-medium text-secondary">
+                            <option>Loading vehicles...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card mb-5 p-4">
+                    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-sliders me-2 text-primary"></i>Vehicle Parameters
+                    </h5>
+                    <div class="row g-4 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-muted small">Current Odometer (km)</label>
+                            <input type="number" id="currentOdometer"
+                                class="form-control form-control-lg bg-light border-0" placeholder="e.g. 15000">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-muted small">Avg. Daily Travel (km)</label>
+                            <div class="input-group">
+                                <input type="number" id="avgDailyKm"
+                                    class="form-control form-control-lg bg-light border-0" placeholder="e.g. 40">
+                                <button class="btn btn-outline-secondary border-0 bg-light fw-medium" type="button"
+                                    onclick="useStandardAvg()">Use Std (40)</button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary-custom w-100 btn-lg shadow-sm" onclick="updateAnalysis()">
+                                <i class="bi bi-calculator me-2"></i> Calculate Projection
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-5">
+                    <div class="col-lg-8">
+                        <div class="card p-4 h-100">
+                            <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-activity text-primary me-2"></i>6-Month
+                                Wear Projection</h5>
+                            <div class="chart-container">
+                                <canvas id="wearChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card p-4 h-100" style="background: linear-gradient(to bottom, #ffffff, #f8f9fc);">
+                            <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-speedometer2 text-info me-2"></i>Mileage
+                                Estimate</h5>
+
+                            <div class="text-center py-3">
+                                <h1 class="display-4 fw-bold text-dark mb-0" id="minRemainingKm">--</h1>
+                                <p class="text-muted fw-medium mt-1 mb-0">Min. Estimated KM Remaining</p>
+                            </div>
+
+                            <!-- Months remaining highlight -->
+                            <div class="text-center mt-3 mb-3" id="monthsRemainingBox">
+                                <div class="rounded-4 py-3 px-3" style="background: linear-gradient(135deg,rgba(13,110,253,0.07),rgba(13,110,253,0.03));border:1px solid rgba(13,110,253,0.12);">
+                                    <div class="display-6 fw-bold" id="minMonthsRemaining" style="color:#0d6efd;">--</div>
+                                    <div class="small fw-semibold text-muted mt-1">Estimated Months of Drive Left</div>
+                                    <div class="small text-muted mt-1" id="replacementDateLabel" style="font-size:0.75rem;"></div>
+                                </div>
+                            </div>
+
+                            <div id="criticalAlertBox"
+                                class="d-none alert alert-danger border-0 rounded-4 shadow-sm mt-auto mb-0 p-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-exclamation-triangle-fill fs-4 me-2"></i>
+                                    <strong class="fs-6">Critical Action Needed!</strong>
+                                </div>
+                                <p class="small mb-3" id="criticalAlertMessage">Some tyres have reached critical wear
+                                    levels. Please replace immediately.</p>
+                                <button class="btn btn-danger btn-sm w-100 rounded-pill fw-semibold"
+                                    onclick="sendReminder()">Send Critical Alert</button>
+                            </div>
+
+                            <div id="goodAlertBox"
+                                class="alert alert-success border-0 rounded-4 shadow-sm mt-auto mb-0 p-3 d-none">
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+                                    <strong class="fs-6">Condition Good</strong>
+                                </div>
+                                <p class="small mb-0 text-success opacity-75">We will notify you by email when wear reaches
+                                    moderate levels.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-5 mb-4">
+                    <h5 class="fw-bold text-dark m-0"><i class="bi bi-ui-checks-grid text-success me-2"></i>Tyre
+                        Specific Analysis</h5>
+                </div>
+
+                <div class="row g-4" id="tyreCardsContainer">
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Tire Rotation Modal -->
+    <div class="modal fade" id="rotationModal" tabindex="-1" aria-labelledby="rotationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0 mt-2">
+                    <h5 class="modal-title fw-bold text-dark" id="rotationModalLabel"><i
+                            class="bi bi-arrow-repeat text-primary me-2"></i>Tire Rotation Manager</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row mb-3">
+                        <div class="col-sm-6 mb-3 mb-sm-0">
+                            <label class="form-label fw-semibold text-muted small">Current Odometer (km)</label>
+                            <input type="number" id="rotCurrentOdo" class="form-control bg-light border-0"
+                                placeholder="e.g. 15000">
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold text-muted small">Last Rotation Odometer (km)</label>
+                            <input type="number" id="rotLastOdo" class="form-control bg-light border-0"
+                                placeholder="e.g. 5000">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-6 mb-3 mb-sm-0">
+                            <label class="form-label fw-semibold text-muted small">Vehicle Drive Type</label>
+                            <select id="rotDriveType" class="form-select bg-light border-0"
+                                onchange="updateRotationPattern()">
+                                <option value="FWD">Front-Wheel Drive (FWD)</option>
+                                <option value="RWD">Rear-Wheel Drive (RWD)</option>
+                                <option value="AWD">All-Wheel/4-Wheel Drive (AWD/4x4)</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label fw-semibold text-muted small">Tire Directionality Type</label>
+                            <select id="rotTireType" class="form-select bg-light border-0"
+                                onchange="updateRotationPattern()">
+                                <option value="Non-Directional">Standard (Non-Directional)</option>
+                                <option value="Directional">Directional Tread</option>
+                                <option value="Staggered">Staggered (Diff front/rear sizes)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-4 ms-1">
+                        <input class="form-check-input" type="checkbox" id="rotIncludeSpare"
+                            onchange="updateRotationPattern()" style="cursor:pointer;">
+                        <label class="form-check-label fw-medium text-dark small ms-2" for="rotIncludeSpare"
+                            style="cursor:pointer;">Include full-size spare (5-Tire Rotation)</label>
+                    </div>
+
+                    <div class="p-3 mb-4 rounded-3 text-center" style="background-color: #f8f9fa;">
+                        <h6 class="text-dark mb-2 fw-bold"><i class="bi bi-bezier2 me-2"></i>Recommended Pattern</h6>
+                        <div id="rotationImagePlaceholder"
+                            class="fw-medium text-primary small d-flex align-items-center justify-content-center p-2 rounded"
+                            style="min-height: 80px; background-color: rgba(13, 110, 253, 0.05); border: 1px dashed rgba(13, 110, 253, 0.3);">
+                            <span class="fw-bold fs-6">Forward Cross: Front shifts straight back, Rear crosses to
+                                front.</span>
+                        </div>
+                        <div id="rotationIntervalText" class="text-muted small mt-2"><i
+                                class="bi bi-info-circle me-1"></i>Standard recommended interval: 10,000 km.</div>
+                    </div>
+
+                    <div id="rotationResult" class="alert d-none border-0 rounded-3 small fw-medium mb-0 shadow-sm"
+                        style="transition: all 0.3s;"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0 mb-2 px-4 pb-4">
+                    <button type="button" class="btn btn-primary w-100 rounded-pill fw-semibold py-2"
+                        onclick="calculateRotation()"><i class="bi bi-calculator me-2"></i>Calculate & Update
+                        History</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wheel Alignment Modal -->
+    <div class="modal fade" id="alignmentModal" tabindex="-1" aria-labelledby="alignmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0 mt-2">
+                    <h5 class="modal-title fw-bold text-dark" id="alignmentModalLabel"><i
+                            class="bi bi-crosshair text-info me-2"></i>Wheel Alignment Diagnostic</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label class="form-label fw-semibold text-muted small">Current Odo. (km)</label>
+                            <input type="number" id="alignCurrentOdo" class="form-control bg-light border-0"
+                                placeholder="e.g. 25000">
+                        </div>
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label class="form-label fw-semibold text-muted small">Odo. at Last Align.</label>
+                            <input type="number" id="alignLastOdo" class="form-control bg-light border-0"
+                                placeholder="Leave empty if N/A">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-muted small">Date of Last Align.</label>
+                            <input type="date" id="alignLastDate" class="form-control bg-light border-0">
+                        </div>
+                    </div>
+
+                    <label class="form-label fw-bold text-dark mb-3"><i
+                            class="bi bi-clipboard2-pulse text-secondary me-2"></i>Diagnostic Checklist</label>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="bg-light p-3 rounded-3 h-100 border"
+                                style="border-color: rgba(0,0,0,0.05) !important;">
+                                <h6 class="small fw-bold text-muted mb-3">Critical Symptoms</h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input symptom-check shadow-none" type="checkbox"
+                                        value="pulls" id="symp1" onchange="handleAlignmentCheck(this)">
+                                    <label class="form-check-label text-dark small" for="symp1">Vehicle pulls heavily to
+                                        one side</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input symptom-check shadow-none" type="checkbox"
+                                        value="offCenter" id="symp4" onchange="handleAlignmentCheck(this)">
+                                    <label class="form-check-label text-dark small" for="symp4">Steering wheel is
+                                        off-center going straight</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input symptom-check shadow-none" type="checkbox"
+                                        value="unevenWear" id="symp5" onchange="handleAlignmentCheck(this)">
+                                    <label class="form-check-label text-dark small" for="symp5">Uneven/rapid tire wear
+                                        on edges</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input symptom-check shadow-none" type="checkbox"
+                                        value="vibrates" id="symp2" onchange="handleAlignmentCheck(this)">
+                                    <label class="form-check-label text-dark small" for="symp2">Steering wheel
+                                        vibrates/wobbles</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="bg-light p-3 rounded-3 h-100 border"
+                                style="border-color: rgba(0,0,0,0.05) !important;">
+                                <h6 class="small fw-bold text-muted mb-3">Recent Events</h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input symptom-event shadow-none" type="checkbox"
+                                        value="suspension" id="symp6" onchange="handleAlignmentCheck(this)">
+                                    <label class="form-check-label text-dark small" for="symp6">Replaced suspension
+                                        components</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input symptom-event shadow-none" type="checkbox"
+                                        value="newTires" id="symp7" onchange="handleAlignmentCheck(this)">
+                                    <label class="form-check-label text-dark small" for="symp7">Installed new set of
+                                        tires</label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input symptom-event shadow-none" type="checkbox"
+                                        value="pothole" id="symp3" onchange="handleAlignmentCheck(this)">
+                                    <label class="form-check-label text-dark small" for="symp3">Hit large pothole, curb,
+                                        or debris</label>
+                                </div>
+                                <hr class="my-2 border-secondary opacity-25">
+                                <div class="form-check mt-2 pt-1">
+                                    <input class="form-check-input symptom-none shadow-none" type="checkbox"
+                                        value="none" id="sympNone" onchange="handleAlignmentCheck(this)">
+                                    <label class="form-check-label text-dark small fw-bold text-success"
+                                        for="sympNone">None (Routine Preventative Check)</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="alignmentResult" class="alert d-none border-0 rounded-3 small fw-medium mb-0 shadow-sm"
+                        style="transition: all 0.3s;"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0 mb-2 px-4 pb-4">
+                    <button type="button" class="btn btn-info text-white w-100 rounded-pill fw-semibold py-2"
+                        onclick="calculateAlignment()"><i class="bi bi-clipboard-check me-2"></i>Analyze & Register
+                        History</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/2.2.1/chartjs-plugin-annotation.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/notification-service.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Authentication check
+            if (!window.authService || !window.authService.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            loadVehicleSelect();
+
+            // Logout Handler
+            const logoutLink = document.getElementById("logoutBtn");
+            if (logoutLink) {
+                logoutLink.onclick = (e) => {
+                    e.preventDefault();
+                    window.authService.logout();
+                };
+            }
+        });
+
+        let currentVehicle = null;
+        let wearChart = null;
+
+        async function loadVehicleSelect() {
+            const select = document.getElementById('vehicleSelect');
+            const vehicles = await window.dbService.getVehicles();
+            select.innerHTML = '';
+
+            if (vehicles.length === 0) {
+                const opt = document.createElement('option');
+                opt.textContent = "No Vehicles Registered";
+                select.appendChild(opt);
+                document.getElementById('tyreCardsContainer').innerHTML = '<div class="col-12"><p class="text-muted p-4 bg-light rounded text-center">Please register a vehicle in the <strong>Tyre Details</strong> tab first.</p></div>';
+
+                const btn = document.querySelector('button[onclick="updateAnalysis()"]');
+                if (btn) btn.disabled = true;
+                return;
+            }
+
+            vehicles.forEach((v, index) => {
+                const option = document.createElement('option');
+                option.value = v.id;
+                option.textContent = `${v.name} (${v.plate})`;
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', (e) => {
+                loadVehicleData(e.target.value);
+            });
+
+            loadVehicleData(vehicles[0].id);
+        }
+
+        async function loadVehicleData(vehicleId) {
+            currentVehicle = await window.dbService.getVehicleById(vehicleId);
+            if (!currentVehicle) return;
+
+            document.getElementById('currentOdometer').value = currentVehicle.currentOdometer || 0;
+            document.getElementById('avgDailyKm').value = currentVehicle.avgDailyKm || 40;
+            document.getElementById('rotCurrentOdo').value = currentVehicle.currentOdometer || '';
+            document.getElementById('alignCurrentOdo').value = currentVehicle.currentOdometer || '';
+
+            renderTyreCards();
+            calculateAndRenderChart();
+        }
+
+        function useStandardAvg() {
+            document.getElementById('avgDailyKm').value = 40;
+        }
+
+        function renderTyreCards() {
+            const container = document.getElementById('tyreCardsContainer');
+            container.innerHTML = '';
+
+            const tyres = currentVehicle.tyres;
+            const avgDaily = parseFloat(document.getElementById('avgDailyKm').value) || 40;
+            let minRemaining = Infinity;
+            let minMonths    = Infinity;
+            let hasCritical  = false;
+            let criticalTyresList = [];
+
+            Object.keys(tyres).forEach(key => {
+                const tyre = tyres[key];
+                const installKm    = tyre.installationKm  || 0;
+                const expectedLife = tyre.expectedLifeKm  || 35000; // ~35,000 km is realistic average in Indian conditions
+                const currentOdo   = parseFloat(document.getElementById('currentOdometer').value) || 0;
+
+                const kmDriven     = Math.max(0, currentOdo - installKm);
+                const wearPercent  = Math.min(100, (kmDriven / expectedLife) * 100);
+
+                // Apply a 0.82 real-world correction factor:
+                // Accounts for Indian road conditions, city traffic stops, uneven load.
+                // Raw remaining = expectedLife - kmDriven; corrected brings it to realistic estimate.
+                const RAW_REMAINING   = Math.max(0, expectedLife - kmDriven);
+                const remainingKm     = Math.round(RAW_REMAINING * 0.82);
+
+                // Months remaining = remaining km ÷ (avg daily km × 30 days)
+                const monthlyKm    = avgDaily * 30;
+                const months       = Math.max(0, Math.floor(remainingKm / monthlyKm));
+
+                if (remainingKm < minRemaining) minRemaining = remainingKm;
+                if (months     < minMonths)     minMonths    = months;
+
+                let status = 'Good';
+                let statusClass = 'status-good';
+                let pbColor = 'bg-success';
+
+                if (wearPercent >= 40 && wearPercent < 70) {
+                    status = 'Moderate';
+                    statusClass = 'status-moderate';
+                    pbColor = 'bg-warning';
+                } else if (wearPercent >= 70) {
+                    status = 'Critical';
+                    statusClass = 'status-critical';
+                    pbColor = 'bg-danger';
+                    hasCritical = true;
+                    criticalTyresList.push(`<strong>${tyre.position}</strong>`);
+                }
+
+                // Tyre-level months label
+                let monthsLabel = '';
+                if (months <= 0) {
+                    monthsLabel = '<span class="text-danger fw-bold small">Replace Now</span>';
+                } else if (months <= 2) {
+                    monthsLabel = `<span class="text-warning fw-bold small">~${months} month${months > 1 ? 's' : ''} left</span>`;
+                } else {
+                    monthsLabel = `<span class="text-success fw-semibold small">~${months} months left</span>`;
+                }
+
+                const col = document.createElement('div');
+                col.className = 'col-md-6 col-lg-3 fade-in-up';
+                col.innerHTML = `
+                    <div class="card p-4 h-100 hover-lift">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold mb-1 text-dark">${tyre.position}</h6>
+                                <input type="text" class="form-control form-control-sm border-0 shadow-none bg-transparent p-0 text-muted fw-medium"
+                                    style="font-size: 0.875em;"
+                                    value="${tyre.brand || ''}" placeholder="Enter Tyre Brand..."
+                                    onchange="updateTyreData('${key}', 'brand', this.value)">
+                            </div>
+                            <span class="status-badge ${statusClass}">${status}</span>
+                        </div>
+
+                        <div class="mb-4 bg-light p-2 rounded-3">
+                            <label class="small text-muted fw-semibold mb-1 d-block">Installation KM</label>
+                            <input type="number" class="form-control form-control-sm border-0 shadow-none bg-white"
+                                value="${installKm}"
+                                onchange="updateTyreData('${key}', 'installationKm', this.value)">
+                        </div>
+
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between small fw-bold mb-2 text-dark">
+                                <span>Wear Level</span>
+                                <span>${wearPercent.toFixed(1)}%</span>
+                            </div>
+                            <div class="progress mb-3 rounded-pill" style="height: 8px; background-color: #e9ecef;">
+                                <div class="progress-bar ${pbColor} rounded-pill" role="progressbar" style="width: ${wearPercent}%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small text-muted">Remaining:</span>
+                                <strong class="text-dark">${remainingKm.toLocaleString()} km</strong>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small text-muted">Drive time:</span>
+                                ${monthsLabel}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+
+            // ── Update Mileage Estimate card ──
+            document.getElementById('minRemainingKm').textContent =
+                minRemaining === Infinity ? '--' : minRemaining.toLocaleString();
+
+            const monthsEl = document.getElementById('minMonthsRemaining');
+            const dateLabel = document.getElementById('replacementDateLabel');
+
+            if (minMonths === Infinity || minMonths <= 0) {
+                if (monthsEl) monthsEl.textContent = '< 1';
+                if (dateLabel) dateLabel.innerHTML = '<span class="text-danger fw-semibold">⚠️ Immediate replacement needed</span>';
+            } else {
+                if (monthsEl) monthsEl.textContent = minMonths;
+                // Calculate approximate replacement date
+                const repDate = new Date();
+                repDate.setMonth(repDate.getMonth() + minMonths);
+                const formatted = repDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+                if (dateLabel) dateLabel.innerHTML = `📅 Replace around <strong>${formatted}</strong>`;
+
+                // Save replacement due info to Firestore for Cloud Function reminders
+                if (currentVehicle && window.dbService) {
+                    window.dbService.updateVehicle({
+                        ...currentVehicle,
+                        monthsRemaining:    minMonths,
+                        replacementDueDate: repDate.toISOString().split('T')[0],
+                        lastAnalysisDate:   new Date().toISOString().split('T')[0]
+                    }).catch(() => {});
+                }
+            }
+
+            const critBox   = document.getElementById('criticalAlertBox');
+            const goodBox   = document.getElementById('goodAlertBox');
+            const alertMessage = document.getElementById('criticalAlertMessage');
+
+            if (hasCritical) {
+                critBox.classList.remove('d-none');
+                goodBox.classList.add('d-none');
+                if (alertMessage) {
+                    alertMessage.innerHTML = `The following tyres have reached critical wear levels and need immediate replacement:<br><br> ${criticalTyresList.join(', ')}`;
+                }
+            } else {
+                critBox.classList.add('d-none');
+                goodBox.classList.remove('d-none');
+            }
+        }
+
+        async function updateTyreData(tyreKey, field, value) {
+            if (!currentVehicle) return;
+            currentVehicle.tyres[tyreKey][field] = field === 'brand' ? value : parseFloat(value);
+            await window.dbService.updateVehicle(currentVehicle);
+            renderTyreCards();
+            calculateAndRenderChart();
+        }
+
+        async function updateAnalysis() {
+            if (!currentVehicle) {
+                alert("Please add a vehicle first before calculating projection!");
+                return;
+            }
+            if (!document.getElementById('currentOdometer').value || !document.getElementById('avgDailyKm').value) {
+                alert("Please enter the Current Odometer and Average Daily Travel values.");
+                return;
+            }
+
+            const newOdo = parseFloat(document.getElementById('currentOdometer').value);
+            const newAvg = parseFloat(document.getElementById('avgDailyKm').value);
+
+            currentVehicle.currentOdometer = newOdo;
+            currentVehicle.avgDailyKm = newAvg;
+
+            await window.dbService.updateVehicle(currentVehicle);
+
+            renderTyreCards();
+            calculateAndRenderChart();
+
+            const btn = document.querySelector('button[onclick="updateAnalysis()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check-lg me-2"></i> Updated!';
+            btn.classList.replace('btn-primary-custom', 'btn-success');
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.replace('btn-success', 'btn-primary-custom');
+            }, 1500);
+
+            if (window.notificationService) {
+                window.notificationService.checkVehicle(currentVehicle);
+            }
+        }
+
+        function calculateAndRenderChart() {
+            const ctx = document.getElementById('wearChart').getContext('2d');
+
+            if (wearChart) wearChart.destroy();
+
+            const avgDaily = currentVehicle.avgDailyKm || 40;
+            const months = ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'];
+            const datasets = [];
+            const colors = ['#dc3545', '#0d6efd', '#ffc107', '#198754'];
+            let colorIdx = 0;
+
+            Object.keys(currentVehicle.tyres).forEach(key => {
+                const tyre = currentVehicle.tyres[key];
+                const data = [];
+                const currentOdo = currentVehicle.currentOdometer || 0;
+                const installKm    = tyre.installationKm || 0;
+                const expectedLife = tyre.expectedLifeKm || 35000; // realistic Indian average
+
+                for (let i = 0; i < 6; i++) {
+                    const days      = (i + 1) * 30;
+                    const futureOdo = currentOdo + (avgDaily * days);
+                    const kmDriven  = Math.max(0, futureOdo - installKm);
+                    // Apply 1/0.82 correction so chart shows realistic projected wear rate
+                    const wearVal   = (kmDriven / (expectedLife * 0.82)) * 100;
+                    data.push(Math.min(wearVal, 100));
+                }
+
+                datasets.push({
+                    label: `${tyre.position}`,
+                    data: data,
+                    borderColor: colors[colorIdx % colors.length],
+                    backgroundColor: colors[colorIdx % colors.length] + '20',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: colors[colorIdx % colors.length],
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                });
+                colorIdx++;
+            });
+
+            wearChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                borderDash: [5, 5],
+                                color: '#e9ecef'
+                            },
+                            ticks: {
+                                callback: function (value) { return value + '%' },
+                                font: { family: 'Inter', size: 12 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Inter', size: 12 } }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { family: 'Inter', size: 13, weight: '500' }
+                            }
+                        },
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    yMin: 70,
+                                    yMax: 70,
+                                    borderColor: 'rgba(220, 53, 69, 0.8)',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        content: 'Critical Wear (70%)',
+                                        display: true,
+                                        position: 'end',
+                                        backgroundColor: 'rgba(220, 53, 69, 0.9)',
+                                        color: 'white',
+                                        font: { family: 'Inter', size: 11, weight: 'bold' }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function sendReminder() {
+            alert("Reminder sent: 'Critical Tyre Wear Detected! Please change your tyres immediately to ensure safety.'");
+        }
+
+        // Tire Rotation Logic
+        function updateRotationPattern() {
+            const driveType = document.getElementById('rotDriveType').value;
+            const tireType = document.getElementById('rotTireType').value;
+            const includeSpare = document.getElementById('rotIncludeSpare').checked;
+            const placeholder = document.getElementById('rotationImagePlaceholder');
+
+            let pattern = "";
+
+            if (tireType === "Directional") {
+                if (includeSpare) {
+                    pattern = "Directional + Spare: Cannot include spare if directional (unless remounted). Front shifts straight to Rear, Rear shifts straight to Front.";
+                } else {
+                    pattern = "Directional Pattern: Front shifts straight to Rear, Rear shifts straight to Front (must stay on same side).";
+                }
+            } else if (tireType === "Staggered") {
+                pattern = "Staggered Pattern: Tires CANNOT be swapped front to back. Left Front to Right Front, Left Rear to Right Rear (if non-directional).";
+            } else {
+                // Non-Directional
+                if (includeSpare) {
+                    if (driveType === 'FWD') {
+                        pattern = "5-Tire FWD: Spare to Right Rear -> Right Rear to Right Front -> Right Front to Left Rear -> Left Rear to Left Front -> Left Front to Spare.";
+                    } else {
+                        pattern = "5-Tire RWD/AWD: Spare to Right Rear -> Right Rear to Right Front -> Right Front to Left Rear -> Left Rear to Left Front -> Left Front to Spare.";
+                    }
+                } else {
+                    if (driveType === 'FWD') {
+                        pattern = "Forward Cross: Front shifts straight back, Rear crosses to front.";
+                    } else {
+                        pattern = "Rearward Cross: Rear shifts straight front, Front crosses to rear.";
+                    }
+                }
+            }
+
+            placeholder.innerHTML = `<span class="fw-bold fs-6">${pattern}</span>`;
+        }
+
+        // Initialize pattern label immediately in modal when it opens
+        document.getElementById('rotationModal').addEventListener('show.bs.modal', updateRotationPattern);
+
+        async function calculateRotation() {
+            const currentOdo = parseFloat(document.getElementById('rotCurrentOdo').value);
+            const lastOdo = parseFloat(document.getElementById('rotLastOdo').value);
+            const driveType = document.getElementById('rotDriveType').value;
+            const tireType = document.getElementById('rotTireType').value;
+
+            if (isNaN(currentOdo) || isNaN(lastOdo)) {
+                alert("Please enter valid positive numbers for odometer readings.");
+                return;
+            }
+
+            const interval = 10000;
+            const nextDue = lastOdo + interval;
+            const remaining = nextDue - currentOdo;
+            const resultBox = document.getElementById('rotationResult');
+            resultBox.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning');
+
+            let message = "";
+            let statusClass = "";
+            let alertLevel = "";
+
+            if (currentOdo >= nextDue) {
+                alertLevel = "Overdue";
+                statusClass = "danger";
+                message = `<i class="bi bi-exclamation-triangle-fill text-danger me-2 fs-5"></i><div class="text-danger"><strong>ACTION REQUIRED:</strong> You are overdue by ${(currentOdo - nextDue).toLocaleString()} km! Immediate rotation recommended.</div>`;
+            } else if (remaining <= 1500) {
+                alertLevel = "Approaching";
+                statusClass = "warning";
+                message = `<i class="bi bi-exclamation-circle-fill text-warning me-2 fs-5"></i><div class="text-dark"><strong>DUE SOON:</strong> Rotate in ${remaining.toLocaleString()} km. (Due strictly at ${nextDue.toLocaleString()} km)</div>`;
+            } else {
+                alertLevel = "Good";
+                statusClass = "success";
+                message = `<i class="bi bi-check-circle-fill text-success me-2 fs-5"></i><div class="text-success"><strong>ON TRACK:</strong> Next rotation due at ${nextDue.toLocaleString()} km (in ${remaining.toLocaleString()} km).</div>`;
+            }
+
+            const progressPercentage = Math.min(100, Math.max(0, ((currentOdo - lastOdo) / interval) * 100));
+
+            resultBox.classList.add(`alert-${statusClass === 'warning' ? 'warning' : statusClass}`);
+            resultBox.style.border = `1px solid var(--bs-${statusClass})`;
+            resultBox.innerHTML = `
+                <div class="d-flex align-items-center mb-3">${message}</div>
+                <div class="progress shadow-sm" style="height: 10px; background-color: rgba(0,0,0,0.1);">
+                    <div class="progress-bar bg-${statusClass} progress-bar-striped ${statusClass !== 'success' ? 'progress-bar-animated' : ''}" role="progressbar" style="width: ${progressPercentage}%"></div>
+                </div>
+            `;
+
+            // Mock Data Save
+            const record = {
+                id: Date.now().toString(),
+                type: 'Tire Rotation',
+                currentOdometer: currentOdo,
+                lastRotationOdometer: lastOdo,
+                driveType: driveType,
+                tireType: tireType,
+                nextDue: nextDue,
+                status: alertLevel,
+                timestamp: new Date().toISOString()
+            };
+
+            // Connect to backend Firebase
+            if (currentVehicle && window.dbService) {
+                if (!currentVehicle.maintenanceHistory) currentVehicle.maintenanceHistory = [];
+                currentVehicle.maintenanceHistory.push(record);
+                try {
+                    await window.dbService.updateVehicle(currentVehicle);
+                    console.log("Firebase Update Successful: ", record);
+                } catch (e) {
+                    console.error("Firebase Update Failed", e);
+                }
+            } else {
+                console.warn("No active vehicle selected to save to Firebase.");
+            }
+        }
+
+        // Wheel Alignment Logic
+        function handleAlignmentCheck(checkbox) {
+            const isNone = checkbox.id === 'sympNone';
+            const symptoms = document.querySelectorAll('.symptom-check, .symptom-event');
+            const noneCheck = document.getElementById('sympNone');
+
+            if (isNone && checkbox.checked) {
+                symptoms.forEach(cb => cb.checked = false);
+            } else if (!isNone && checkbox.checked) {
+                noneCheck.checked = false;
+            }
+        }
+
+        async function calculateAlignment() {
+            const currentOdo = parseFloat(document.getElementById('alignCurrentOdo').value);
+            const lastOdo = parseFloat(document.getElementById('alignLastOdo').value);
+            const lastDate = document.getElementById('alignLastDate').value;
+
+            if (isNaN(currentOdo)) {
+                alert("Please fill in current odometer at minimum.");
+                return;
+            }
+
+            const symptoms = Array.from(document.querySelectorAll('.symptom-check'))
+                .filter(cb => cb.checked)
+                .map(cb => cb.nextElementSibling.innerText);
+
+            const events = Array.from(document.querySelectorAll('.symptom-event'))
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            const noneChecked = document.getElementById('sympNone').checked;
+
+            const resultBox = document.getElementById('alignmentResult');
+            resultBox.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning', 'alert-info');
+
+            let alertClass = "";
+            let icon = "";
+            let htmlContent = "";
+
+            if (events.includes("suspension")) {
+                alertClass = "danger";
+                icon = "bi-exclamation-triangle-fill text-danger";
+                htmlContent = `<strong>MANDATORY ALIGNMENT:</strong> Suspension work alters alignment geometry. A full chassis alignment must be performed immediately.`;
+            } else if (symptoms.length > 0 || events.includes("pothole")) {
+                alertClass = "danger";
+                icon = "bi-cone-striped text-danger";
+                htmlContent = `<strong>URGENT CHECK:</strong> Your symptoms (${symptoms.length > 0 ? symptoms.join(', ') : 'Pothole impact'}) indicate severe alignment issues. Inspect and align immediately to avoid rapid tire destruction.`;
+            } else if (events.includes("newTires")) {
+                alertClass = "warning";
+                icon = "bi-exclamation-circle-fill text-warning";
+                htmlContent = `<strong>RECOMMENDED:</strong> You installed new tires. Aligning the wheels ensures they don't wear unevenly from preexisting geometry faults.`;
+            } else if (noneChecked) {
+                let needsRoutineByMileage = false;
+                let needsRoutineByTime = false;
+
+                if (!isNaN(lastOdo) && (currentOdo - lastOdo >= 15000)) needsRoutineByMileage = true;
+
+                if (lastDate) {
+                    const monthsDiff = (new Date() - new Date(lastDate)) / (1000 * 60 * 60 * 24 * 30);
+                    if (monthsDiff >= 12) needsRoutineByTime = true;
+                }
+
+                if (needsRoutineByMileage || needsRoutineByTime) {
+                    alertClass = "warning";
+                    icon = "bi-clock-history text-warning";
+                    htmlContent = `<strong>ROUTINE CHECK DUE:</strong> It has been over ${needsRoutineByTime ? '1 year' : '15,000 km'} since your last alignment check. Consider doing a preventative laser alignment verification.`;
+                } else if (isNaN(lastOdo) || !lastDate) {
+                    alertClass = "info";
+                    icon = "bi-info-circle-fill text-info";
+                    htmlContent = `<strong>DATA MISSING:</strong> Without a past record, we recommend getting a baseline alignment test on your next oil change to establish a baseline.`;
+                } else {
+                    alertClass = "success";
+                    icon = "bi-check-circle-fill text-success";
+                    htmlContent = `<strong>OPTIMAL:</strong> No symptoms reported and recent alignment parameters are safely within the standard threshold. Drive safe!`;
+                }
+            } else {
+                alert("Please select at least one diagnostic symptom or mark as None.");
+                return;
+            }
+
+            resultBox.classList.add(`alert-${alertClass}`);
+            resultBox.innerHTML = `<div class="d-flex align-items-start p-1"><i class="bi ${icon} fs-4 me-3"></i><div class="text-dark">${htmlContent}</div></div>`;
+
+            // Mock Data Save
+            const record = {
+                id: Date.now().toString(),
+                type: 'Wheel Alignment',
+                currentOdometer: currentOdo,
+                lastAlignmentOdometer: isNaN(lastOdo) ? null : lastOdo,
+                lastAlignmentDate: lastDate || null,
+                diagnosticSymptoms: symptoms.concat(events.filter(e => e !== 'none')),
+                isRoutineCheck: noneChecked,
+                timestamp: new Date().toISOString()
+            };
+
+            // Connect to backend Firebase
+            if (currentVehicle && window.dbService) {
+                if (!currentVehicle.maintenanceHistory) currentVehicle.maintenanceHistory = [];
+                currentVehicle.maintenanceHistory.push(record);
+                try {
+                    await window.dbService.updateVehicle(currentVehicle);
+                    console.log("Firebase Update Successful: ", record);
+                } catch (e) {
+                    console.error("Firebase Update Failed", e);
+                }
+            } else {
+                console.warn("No active vehicle selected to save to Firebase.");
+            }
+        }
+    </script>
+</body>
+
+</html>

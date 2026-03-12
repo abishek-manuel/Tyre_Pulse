@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Tyre Pulse AI Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+    <link href="style.css" rel="stylesheet" />
+    <script src="js/theme.js"></script>
+
+    <style>
+        .app-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--card-shadow);
+            display: flex;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-section {
+            width: 45%;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fafafa;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background: #ffffff;
+            min-height: 500px;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            background: #fafafa;
+        }
+
+        .artifact-section {
+            width: 55%;
+            padding: 30px;
+            background: #f8f9fc;
+        }
+
+        .bot-msg {
+            background: #f3f4f6;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border-bottom-left-radius: 4px;
+            margin-bottom: 16px;
+            max-width: 85%;
+            font-size: 14.5px;
+            color: #1f2937;
+        }
+
+        .user-msg {
+            background: var(--primary-color);
+            color: white;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border-bottom-right-radius: 4px;
+            margin-bottom: 16px;
+            margin-left: auto;
+            max-width: 85%;
+            font-size: 14.5px;
+        }
+
+        .suggestion-btn {
+            border-radius: 50rem;
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0 6px 6px 0;
+        }
+
+        .artifact-box {
+            border: 2px dashed #e5e7eb;
+            border-radius: 16px;
+            padding: 24px;
+            background: #ffffff;
+            min-height: 250px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-glass px-4 py-3">
+        <a class="navbar-brand fw-bold text-dark" href="dashboard.html">
+            <i class="bi bi-vinyl-fill text-danger me-2"></i>Tyre Pulse <span
+                class="badge bg-primary ms-2 rounded-pill">AI</span>
+        </a>
+        <div class="d-flex align-items-center">
+            <button class="btn btn-outline-secondary rounded-pill px-3 me-3" onclick="window.toggleTheme(event)">
+                <i class="bi bi-moon-fill theme-icon"></i> Switch Theme
+            </button>
+            <a href="dashboard.html" class="btn btn-light rounded-pill px-4 shadow-sm border">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="app-container fade-in-up">
+        <div class="chat-section">
+            <div class="chat-header">
+                <h5 class="mb-1 fw-bold">Tyre Assistant</h5>
+                <small class="text-muted">Instant tyre health, wear analysis & maintenance guidance</small>
+            </div>
+
+            <div class="chat-box" id="chatBox">
+                <div class="bot-msg shadow-sm">
+                    <strong class="text-primary"><i class="bi bi-robot me-1"></i> Tyre Pulse AI</strong><br />
+                    Hello 👋 I am here to help you understand your tyre wear, schedule maintenance, or handle
+                    emergencies. What do you need help with?
+                </div>
+            </div>
+
+            <div class="px-4 pb-3 bg-fafafa">
+                <small class="text-muted fw-semibold d-block mb-2">Quick actions</small>
+                <button class="btn btn-outline-secondary btn-sm suggestion-btn bg-white"
+                    onclick="sendSuggestion('Show tyre wear analysis')">Wear Analysis</button>
+                <button class="btn btn-outline-secondary btn-sm suggestion-btn bg-white"
+                    onclick="sendSuggestion('Predict maintenance')">Maintenance</button>
+                <button class="btn btn-outline-danger btn-sm suggestion-btn bg-white"
+                    onclick="sendSuggestion('Emergency help')">Emergency Help</button>
+            </div>
+
+            <div class="input-area">
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-lg bg-white border-end-0 shadow-sm"
+                        id="userInput" placeholder="Ask anything..." />
+                    <button class="btn btn-primary-custom px-4 shadow-sm" onclick="sendMessage()"><i
+                            class="bi bi-send-fill"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="artifact-section">
+            <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Insights &
+                Analysis</h5>
+            <div class="artifact-box d-flex flex-column align-items-center justify-content-center text-center"
+                id="artifactBox">
+                <div id="artifactContent">
+                    <div class="rounded-circle bg-light p-4 mb-3 d-inline-block">
+                        <i class="bi bi-bar-chart text-muted fs-2"></i>
+                    </div>
+                    <p class="text-muted fw-medium">AI-generated charts, reports, or guides will appear here when
+                        requested.</p>
+                </div>
+                <canvas id="analysisChart" class="mt-3 w-100" style="display: none"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- Project Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.authService || !window.authService.isAuthenticated()) {
+                window.location.href = 'login.html';
+            }
+
+            // Add Enter key listener
+            document.getElementById('userInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+
+        function appendMessage(sender, text, isUser) {
+            const chatBox = document.getElementById('chatBox');
+            const msgDiv = document.createElement('div');
+
+            if (isUser) {
+                msgDiv.className = 'user-msg shadow-sm text-end fade-in-up';
+                msgDiv.innerHTML = `<strong>You</strong><br/>${text}`;
+            } else {
+                msgDiv.className = 'bot-msg shadow-sm fade-in-up';
+                msgDiv.innerHTML = `<strong class="text-primary"><i class="bi bi-robot me-1"></i> ${sender}</strong><br />${text}`;
+            }
+
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            appendMessage('You', text, true);
+            input.value = '';
+
+            // Simulate AI thinking
+            setTimeout(async () => {
+                const textLower = text.toLowerCase();
+                let reply = "I'm not exactly sure about that, but I'm always learning! 😊 Feel free to ask me anything about tyre wear, maintenance, rotation, alignment, or what to do in an emergency.";
+
+                // --- LIVE DATA QUERIES ---
+                if (textLower.match(/\b(my vehicle|my car|my vehicles|my plate|my odometer|my tires|my tyres|my data)\b/)) {
+                    try {
+                        const vehicles = await window.dbService.getVehicles();
+                        if (!vehicles || vehicles.length === 0) {
+                            reply = "It looks like you don't have any vehicles registered to your account yet. Please head over to the **Tyre Details** tab to set up your first vehicle before I can analyze its metrics!";
+                        } else {
+                            const v = vehicles[0]; // Primary vehicle
+                            if (textLower.match(/odometer|mileage/)) {
+                                reply = `Sure! Your primary vehicle (**${v.name || v.plate}**) currently has a recorded odometer reading of **${(v.currentOdometer || 0).toLocaleString()} km**. Your estimated average daily travel is **${v.avgDailyKm || 40} km**.`;
+                            } else if (textLower.match(/tire|tyre|wear|tread/)) {
+                                reply = `Here is the current tyre configuration registered for your **${v.name}**:<ul>`;
+                                Object.keys(v.tyres).forEach(k => {
+                                    const t = v.tyres[k];
+                                    reply += `<li class='mb-1'><strong>${t.position}:</strong> ${t.brand || 'Unknown'}, installed at ${(t.installationKm || 0).toLocaleString()} km (Est. Life: ${(t.expectedLifeKm || 40000).toLocaleString()} km)</li>`;
+                                });
+                                reply += "</ul>You can run an advanced calculation on this configuration using the **Wear Analysis** tab!";
+                            } else {
+                                reply = "Here are the vehicles currently registered to your profile:<br><ul class='mt-2'>";
+                                vehicles.forEach(veh => {
+                                    reply += `<li class='mb-1 text-primary fw-medium'><i class="bi bi-car-front me-2"></i><strong>${veh.name || 'Unnamed'}</strong> (Plate: ${veh.plate}) - ${(veh.currentOdometer || 0).toLocaleString()} km</li>`;
+                                });
+                                reply += "</ul>";
+                            }
+                        }
+                    } catch (e) {
+                        reply = "Sorry, I am having trouble securely accessing your vehicle data from the database at the moment.";
+                    }
+                }
+                // --- KNOWLEDGE BASE ---
+                else if (textLower.match(/\b(hello|hi|hey|greetings|good morning|good afternoon|good evening)\b/)) {
+                    reply = "Hello there! 👋 I'm your Tyre Pulse AI Assistant. How can I help you keep your tyres in top shape today?";
+                } else if (textLower.match(/\b(how are you|how do you do|how's it going)\b/)) {
+                    reply = "I'm functioning perfectly and ready to help you with your vehicle! 🚗 What's on your mind?";
+                } else if (textLower.match(/\b(thank you|thanks|thx|appreciate it)\b/)) {
+                    reply = "You're very welcome! 😊 Let me know if you need anything else.";
+                } else if (textLower.match(/\b(bye|goodbye|cya|see you)\b/)) {
+                    reply = "Goodbye! Drive safe and keep those tyres inflated! 🛣️";
+                } else if (textLower.match(/wear|tread/)) {
+                    reply = "To check your tyre wear, look for the wear indicator bars in the main grooves. Alternatively, you can use the 'coin test'. If tread depth falls below 1.6mm (2/32\"), it's time to replace the tyre to maintain safe traction.";
+                    showArtifact('wear');
+                } else if (textLower.match(/rotate|rotation/)) {
+                    reply = "Tyre rotation ensures even wear. For front-wheel drive, move the front tyres straight back and cross the rear tyres to the front. For rear-wheel or 4WD, cross the front tyres to the back and move the rear straight forward. You should rotate them every 8,000 to 12,000 km.";
+                    showArtifact('rotation');
+                } else if (textLower.match(/align|alignment/)) {
+                    reply = "Wheel alignment ensures your tyres point straight and interact with the road at the right angle. Symptoms of bad alignment include the car pulling to one side, an off-center steering wheel, or uneven/rapid tyre wear. Have it checked every time you install new tyres or at least once a year.";
+                } else if (textLower.match(/emergency|flat|puncture|change/)) {
+                    reply = "<strong class='text-danger'>Emergency Tyre Change Instructions:</strong><br>1. Pull over to a safe, level area away from traffic.<br>2. Turn on hazard lights and apply the parking brake.<br>3. Locate your spare tyre, jack, and lug wrench.<br>4. Loosen the lug nuts slightly, then jack the car up.<br>5. Remove the nuts and the flat tyre.<br>6. Mount the spare, hand-tighten the nuts, lower the car, and fully tighten in a star pattern.<br><em>Do not exceed 80 km/h on a space-saver spare!</em>";
+                } else if (textLower.match(/maintenance|service/)) {
+                    reply = "Regular tyre maintenance includes: checking pressure monthly (when tyres are cold), inspecting for visible damage or foreign objects, rotating tyres every 10k km, and getting the alignment and balance checked regularly.";
+                } else if (textLower.match(/pressure|psi|inflate/)) {
+                    reply = "Proper tyre pressure is crucial. You can find the recommended PSI for your vehicle on a sticker located on the driver's side door jamb or inside the fuel flap. Over-inflated tyres wear out in the middle, while under-inflated ones wear on the edges.";
+                }
+
+                appendMessage('Tyre Pulse AI', reply, false);
+            }, 800);
+        }
+
+        function sendSuggestion(text) {
+            document.getElementById('userInput').value = text;
+            sendMessage();
+        }
+
+        function showArtifact(type) {
+            const box = document.getElementById('artifactContent');
+            box.innerHTML = '';
+
+            if (type === 'wear') {
+                box.innerHTML = `
+                    <div class="text-start w-100 fade-in-up">
+                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-graph-up-arrow me-2"></i>Wear Indicator Guide</h6>
+                        <div class="mb-4">
+                            <p class="small text-muted mb-2">Monitor tread wear via wear bars or tread depth measurements:</p>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="badge bg-success me-2" style="width: 50px">&gt; 3mm</div>
+                                <small class="text-dark">Safe to drive. Excellent grip.</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="badge bg-warning text-dark me-2" style="width: 50px">~ 2mm</div>
+                                <small class="text-dark">Marginal. Plan to replace soon.</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="badge bg-danger me-2" style="width: 50px">&lt; 1.6mm</div>
+                                <small class="text-danger fw-bold">Unsafe. Replace immediately.</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'rotation') {
+                box.innerHTML = `
+                    <div class="text-start w-100 fade-in-up">
+                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-arrow-repeat me-2"></i>Standard Cross Rotation</h6>
+                        <div class="p-3 bg-white border rounded shadow-sm text-center mb-3">
+                            <div class="row align-items-center justify-content-center">
+                                <div class="col-4">
+                                    <div class="p-2 border rounded bg-light mb-4">Front Left</div>
+                                    <div class="text-muted"><i class="bi bi-arrow-down fs-4"></i></div>
+                                    <div class="p-2 border rounded bg-light mt-4">Rear Left</div>
+                                </div>
+                                <div class="col-2 text-primary fs-3"><i class="bi bi-arrows-angle-expand"></i></div>
+                                <div class="col-4">
+                                    <div class="p-2 border rounded bg-light mb-4">Front Right</div>
+                                    <div class="text-muted"><i class="bi bi-arrow-down fs-4"></i></div>
+                                    <div class="p-2 border rounded bg-light mt-4">Rear Right</div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="small text-muted">A Forward Cross is the most common pattern for front-wheel drive vehicles.</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+
+</html>

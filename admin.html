@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Tyre Pulse</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="style.css" rel="stylesheet">
+    <script src="js/theme.js"></script>
+</head>
+
+<body>
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+
+            <div class="col-md-2 sidebar d-none d-md-block">
+                <h4 class="d-flex align-items-center">
+                    <i class="bi bi-vinyl-fill text-danger me-2"></i>Tyre Pulse
+                    <span class="badge bg-danger ms-2 rounded-pill"
+                        style="font-size: 0.45em; letter-spacing: 1px;">ADMIN</span>
+                </h4>
+                <div class="mt-4">
+                    <a href="admin.html" class="active"><i class="bi bi-speedometer2"></i> Overview</a>
+                    <a href="admin-users.html"><i class="bi bi-people"></i> Manage Users</a>
+                    <a href="admin-owners.html"><i class="bi bi-shop"></i> Manage Owners</a>
+                    <a href="admin-blogs.html"><i class="bi bi-journal-text"></i> Manage Blogs</a>
+                    <a href="admin-offers.html"><i class="bi bi-tag"></i> Manage Offers</a>
+                </div>
+
+                <div style="position: absolute; bottom: 30px; width: 100%;">
+                    <a href="#" onclick="window.toggleTheme(event)"><i class="bi bi-moon-fill theme-icon"></i> Toggle
+                        Theme</a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="bi bi-key"></i>
+                        Change Password</a>
+                    <a href="dashboard.html"><i class="bi bi-arrow-left-circle"></i> Back to User App</a>
+                    <a href="login.html"
+                        onclick="sessionStorage.removeItem('isAdmin'); window.authService?.logout();"><i
+                            class="bi bi-box-arrow-right"></i> Logout</a>
+                </div>
+            </div>
+
+            <div class="col-md-10 p-4 p-lg-5 fade-in-up">
+
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <div>
+                        <h2 class="section-title mb-1">Admin Dashboard ⚙️</h2>
+                        <p class="text-muted mb-0">Welcome back, Administrator. Here is what's happening today.</p>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-5">
+                    <div class="col-md-3">
+                        <div class="card p-4 hover-lift h-100">
+                            <h6 class="text-muted fw-bold text-uppercase small letter-spacing">Total Users</h6>
+                            <h2 class="fw-bold text-dark m-0 mt-2" id="stat-users">...</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card p-4 hover-lift h-100">
+                            <h6 class="text-muted fw-bold text-uppercase small letter-spacing">Active Vehicles</h6>
+                            <h2 class="fw-bold text-dark m-0 mt-2" id="stat-vehicles">...</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card p-4 hover-lift h-100">
+                            <h6 class="text-muted fw-bold text-uppercase small letter-spacing">Blogs Published</h6>
+                            <h2 class="fw-bold text-dark m-0 mt-2" id="stat-blogs">...</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card p-4 hover-lift h-100 border-start border-4 border-danger">
+                            <h6 class="text-muted fw-bold text-uppercase small letter-spacing">Server Health</h6>
+                            <h2 class="fw-bold text-danger m-0 mt-2" id="stat-health">Stable</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+                        <div class="card h-100 p-4 border-0 shadow-sm">
+                            <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-journal-text text-success me-2"></i>Blog
+                                Moderation</h5>
+
+                            <ul class="nav nav-pills mb-3 bg-light rounded-pill p-1" id="pills-tab" role="tablist">
+                                <li class="nav-item w-50 text-center" role="presentation">
+                                    <button class="nav-link active rounded-pill fw-semibold small w-100"
+                                        data-bs-toggle="pill" data-bs-target="#pills-pending" type="button">
+                                        Pending <span class="badge bg-danger ms-1 d-none" id="pendingCount"></span>
+                                    </button>
+                                </li>
+                                <li class="nav-item w-50 text-center" role="presentation">
+                                    <button class="nav-link rounded-pill fw-semibold small text-muted w-100"
+                                        data-bs-toggle="pill" data-bs-target="#pills-published" type="button">
+                                        Published
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content mt-3" id="pills-tabContent">
+
+                                <div class="tab-pane fade show active" id="pills-pending">
+                                    <div class="list-group list-group-flush" id="pendingBlogsList">
+
+                                        <div class="list-group-item px-3 py-3 border-0 mb-2 bg-warning bg-opacity-10 rounded-3"
+                                            id="blog-123">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <span class="badge bg-warning text-dark mb-1">Needs Review</span>
+                                                    <div class="fw-bold text-dark">Why Nitrogen is better for tyres
+                                                    </div>
+                                                    <small class="text-muted">By: User Rahul123</small>
+                                                </div>
+                                                <button
+                                                    class="btn btn-sm btn-link text-primary p-0 text-decoration-none small fw-semibold">View
+                                                    Draft</button>
+                                            </div>
+                                            <div class="d-flex gap-2 mt-3">
+                                                <button
+                                                    class="btn btn-sm btn-success rounded-pill fw-medium px-3 flex-grow-1"
+                                                    onclick="approveBlog('blog-123')">
+                                                    <i class="bi bi-check-circle me-1"></i> Approve
+                                                </button>
+                                                <button
+                                                    class="btn btn-sm btn-outline-danger rounded-pill fw-medium px-3 flex-grow-1"
+                                                    onclick="rejectBlog('blog-123')">
+                                                    <i class="bi bi-x-circle me-1"></i> Reject
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="pills-published">
+                                    <div class="list-group list-group-flush" id="publishedBlogsList">
+
+                                        <div
+                                            class="list-group-item d-flex justify-content-between align-items-center px-3 py-3 border-0 mb-2 bg-light rounded-3">
+                                            <div>
+                                                <span
+                                                    class="badge bg-success bg-opacity-10 text-success mb-1 border border-success border-opacity-25">Live</span>
+                                                <div class="fw-bold text-dark">Tyre Wear & Safety Guide</div>
+                                                <small class="text-muted">Approved 2 days ago</small>
+                                            </div>
+                                            <button
+                                                class="btn btn-sm btn-white border text-danger rounded-pill shadow-sm"
+                                                title="Remove post"><i class="bi bi-trash3"></i></button>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card h-100 p-4">
+                            <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-tags-fill text-warning me-2"></i>Add
+                                Promotion</h5>
+                            <p class="text-muted small mb-4">Promote new service discounts to users.</p>
+                            <form id="offerForm" onsubmit="handleOfferSubmit(event)">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold text-muted">Offer Description</label>
+                                    <input type="text" id="offerDesc"
+                                        class="form-control form-control-lg bg-light border-0"
+                                        placeholder="e.g. 20% off Wheel Alignment" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary-custom w-100 py-2 rounded-pill mt-2">
+                                    <i class="bi bi-plus-lg me-1"></i> Add New Offer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0 mt-2">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-shield-lock text-primary me-2"></i>Change
+                        Password</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-4">Enter a new secure password for your admin account.</p>
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">New Password</label>
+                            <input type="password" id="newPassword" class="form-control bg-light border-0 py-2" required
+                                minlength="6" placeholder="At least 6 characters">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-muted small">Confirm New Password</label>
+                            <input type="password" id="confirmNewPassword" class="form-control bg-light border-0 py-2"
+                                required placeholder="Retype new password">
+                        </div>
+                        <div id="passwordAlertBox" class="alert d-none border-0 rounded-3 small fw-medium mb-0"></div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0 mb-2 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-custom rounded-pill px-4"
+                        onclick="executeChangePassword()" id="changePwdBtn">Update Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- Project Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/db.js?v=2"></script>
+    <script src="js/auth.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 🔐 Authentication check
+            if (sessionStorage.getItem('isAdmin') !== 'true' && (!window.authService || !window.authService.isAuthenticated())) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            // Execute parallel loads
+            loadAdminBlogs();
+
+            try {
+                const stats = await window.dbService.getAdminStats();
+                document.getElementById('stat-users').innerText = stats.totalUsers;
+                document.getElementById('stat-vehicles').innerText = stats.totalVehicles;
+                document.getElementById('stat-blogs').innerText = stats.approvedBlogs;
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        // Fetches and displays blogs from Firebase
+        async function loadAdminBlogs() {
+            const pendingList = document.getElementById('pendingBlogsList');
+            const publishedList = document.getElementById('publishedBlogsList');
+
+            pendingList.innerHTML = '<p class="text-center text-muted p-3">Loading...</p>';
+            publishedList.innerHTML = '<p class="text-center text-muted p-3">Loading...</p>';
+
+            try {
+                const pendingBlogs = await window.dbService.getPendingBlogs();
+                const approvedBlogs = await window.dbService.getApprovedBlogs();
+
+                // Render Pending Blogs
+                pendingList.innerHTML = '';
+                if (pendingBlogs.length === 0) {
+                    pendingList.innerHTML = '<p class="text-muted small text-center mt-3">No pending blogs to review!</p>';
+                } else {
+                    pendingBlogs.forEach(blog => {
+                        pendingList.innerHTML += `
+                    <div class="list-group-item px-3 py-3 border-0 mb-2 bg-warning bg-opacity-10 rounded-3" id="${blog.id}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-warning text-dark mb-1">Needs Review</span>
+                                <div class="fw-bold text-dark">${blog.title}</div>
+                                <small class="text-muted">By: ${blog.author} on ${blog.date}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <button class="btn btn-sm btn-success rounded-pill fw-medium px-3 flex-grow-1" onclick="handleBlogAction('${blog.id}', 'approved')">
+                                <i class="bi bi-check-circle me-1"></i> Approve
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill fw-medium px-3 flex-grow-1" onclick="handleBlogAction('${blog.id}', 'rejected')">
+                                <i class="bi bi-x-circle me-1"></i> Reject
+                            </button>
+                        </div>
+                    </div>`;
+                    });
+                }
+                document.getElementById('pendingCount').innerText = pendingBlogs.length;
+                if (pendingBlogs.length === 0) {
+                    document.getElementById('pendingCount').classList.add('d-none');
+                } else {
+                    document.getElementById('pendingCount').classList.remove('d-none');
+                }
+
+                // Render Published Blogs
+                publishedList.innerHTML = '';
+                if (approvedBlogs.length === 0) {
+                    publishedList.innerHTML = '<p class="text-muted small text-center mt-3">No published blogs yet.</p>';
+                } else {
+                    approvedBlogs.forEach(blog => {
+                        publishedList.innerHTML += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-3 py-3 border-0 mb-2 bg-light rounded-3 shadow-sm hover-lift">
+                        <div>
+                            <span class="badge bg-success bg-opacity-10 text-success mb-1 border border-success border-opacity-25">Live</span>
+                            <div class="fw-bold text-dark">${blog.title}</div>
+                            <small class="text-muted">By: ${blog.author}</small>
+                        </div>
+                        <button class="btn btn-sm btn-white border border-danger text-danger rounded-pill shadow-sm px-3 fw-medium" title="Remove post" onclick="deleteBlogAction('${blog.id}')">
+                            <i class="bi bi-trash3 me-1"></i> Remove
+                        </button>
+                    </div>`;
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading admin blogs:", error);
+            }
+        }
+
+        // Handles Approve or Reject clicks
+        async function handleBlogAction(blogId, action) {
+            const actionText = action === 'approved' ? 'publish' : 'reject';
+            if (confirm(`Are you sure you want to ${actionText} this article?`)) {
+                try {
+                    // Update Firebase
+                    await window.dbService.updateBlogStatus(blogId, action);
+                    alert(`Success: Blog has been ${action}!`);
+                    // Reload the lists to reflect changes
+                    loadAdminBlogs();
+                } catch (error) {
+                    alert("Error updating blog: " + error.message);
+                }
+            }
+        }
+        // Handlers for deleting blogs and submitting offers directly from overview
+        async function deleteBlogAction(id) {
+            if (confirm('Are you certain you want to permanently delete this public blog?')) {
+                try {
+                    await window.dbService.deleteBlog(id);
+                    loadAdminBlogs();
+                } catch (e) { alert(e.message); }
+            }
+        }
+
+        async function handleOfferSubmit(e) {
+            e.preventDefault();
+            const desc = document.getElementById('offerDesc').value;
+            try {
+                await window.dbService.addOffer(desc);
+                alert("Offer successfully pushed to user dashboards!");
+                document.getElementById('offerForm').reset();
+            } catch (e) {
+                alert("Error pushing offer: " + e.message);
+            }
+        }
+
+        async function executeChangePassword() {
+            const pwd1 = document.getElementById('newPassword').value;
+            const pwd2 = document.getElementById('confirmNewPassword').value;
+            const alertBox = document.getElementById('passwordAlertBox');
+            const submitBtn = document.getElementById('changePwdBtn');
+
+            alertBox.classList.add('d-none');
+            alertBox.classList.remove('alert-danger', 'alert-success');
+
+            if (pwd1.length < 6) {
+                alertBox.innerText = "Password must be at least 6 characters long.";
+                alertBox.classList.add('alert-danger');
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            if (pwd1 !== pwd2) {
+                alertBox.innerText = "Passwords do not match.";
+                alertBox.classList.add('alert-danger');
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            try {
+                submitBtn.innerText = "Updating...";
+                submitBtn.disabled = true;
+                await window.authService.changePassword(pwd1);
+
+                alertBox.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Password updated successfully!';
+                alertBox.classList.add('alert-success');
+                alertBox.classList.remove('d-none');
+
+                document.getElementById('changePasswordForm').reset();
+                setTimeout(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+                    alertBox.classList.add('d-none');
+                    submitBtn.innerText = "Update Password";
+                    submitBtn.disabled = false;
+                }, 2000);
+            } catch (error) {
+                alertBox.innerText = error.message || "Failed to update password. You may need to sign out and sign in again.";
+                alertBox.classList.add('alert-danger');
+                alertBox.classList.remove('d-none');
+                submitBtn.innerText = "Update Password";
+                submitBtn.disabled = false;
+            }
+        }
+    </script>
+
+</body>
+
+</html>

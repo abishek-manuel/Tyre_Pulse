@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Owner Dashboard | Tyre Pulse</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+    
+    <!-- Custom CSS -->
+    <link href="style.css" rel="stylesheet" />
+    <script src="js/theme.js"></script>
+
+    <style>
+        .owner-sidebar {
+            background-color: #212529 !important; /* Darker sidebar for owner view */
+        }
+        .owner-sidebar h4, .owner-sidebar a {
+            color: #f8f9fa;
+        }
+        .owner-sidebar a:hover, .owner-sidebar a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-left: 4px solid #ff4757;
+        }
+        
+        /* Stats cards custom gradient */
+        .stat-card-gradient-1 {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+        .stat-card-gradient-2 {
+            background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
+            color: white;
+        }
+        .stat-card-gradient-3 {
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+            color: white;
+        }
+
+        /* Specific Timeline Overrides */
+        .timeline-item {
+            border-left: 2px solid #e9ecef;
+            padding-left: 30px;
+            position: relative;
+            padding-bottom: 30px;
+        }
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        .timeline-item::before {
+            content: '';
+            width: 16px;
+            height: 16px;
+            background: white;
+            border: 3px solid #ff4757;
+            border-radius: 50%;
+            position: absolute;
+            left: -9px;
+            top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar owner-sidebar d-none d-md-block min-vh-100 position-relative border-0 shadow">
+                <h4 class="px-4 pt-4 pb-2 mb-0 d-flex align-items-center">
+                    <i class="bi bi-shop text-danger me-2 fs-3"></i>Tyre Pulse
+                </h4>
+                <div class="px-4 pb-4 small text-light opacity-75 fw-semibold border-bottom border-secondary border-opacity-25 border-end-0">
+                    Owner Portal
+                </div>
+                
+                <div class="mt-4">
+                    <a href="#" id="navDashboard" class="active" onclick="showSection('dashboardSection');return false;"><i class="bi bi-grid-fill me-2 w-20px"></i> Dashboard</a>
+                    <a href="#" id="navAppointments" onclick="showSection('appointmentsSection');return false;"><i class="bi bi-calendar-check me-2"></i> Appointments</a>
+                    <a href="#" id="navCustomers" onclick="showSection('customersSection');return false;"><i class="bi bi-people me-2"></i> Customers</a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#shopProfileModal"><i class="bi bi-person-badge me-2"></i> Shop Profile</a>
+                </div>
+                
+                <div style="position: absolute; bottom: 30px; width: 100%;">
+                    <a href="#" onclick="window.toggleTheme(event)"><i class="bi bi-moon-fill theme-icon me-2"></i> Toggle Theme</a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><i class="bi bi-key me-2"></i> Change Password</a>
+                    <a href="login.html" id="logoutBtn"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4 p-lg-5 fade-in-up bg-body min-vh-100">
+                <!-- Top Header -->
+                <div class="d-flex justify-content-between align-items-center mb-5 bg-body-tertiary p-3 p-md-4 rounded-4 shadow-sm border border-secondary border-opacity-10">
+                    <div>
+                        <h2 class="section-title mb-1 fw-bold text-body-emphasis" id="welcomeText">Welcome to your Shop! 👋</h2>
+                        <p class="text-muted mb-0 d-none d-md-block">Here is the daily overview of your tyre business.</p>
+                    </div>
+                    <div class="d-flex gap-2 gap-md-3 align-items-center">
+                        <button class="btn btn-dark rounded-pill d-md-none" id="mobileLogoutBtn">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dashboard Section (default visible) -->
+                <div id="dashboardSection">
+
+                <!-- Main Content Areas -->
+                <div class="row g-4">
+
+                    <!-- Promotions (full width) -->
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm rounded-4 p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h5 class="fw-bold mb-0 text-body-emphasis"><i class="bi bi-tags-fill text-warning me-2"></i>Promotions</h5>
+                            </div>
+
+                            <form id="offerForm" onsubmit="handleOfferSubmit(event)" class="mb-4">
+                                <div class="input-group">
+                                    <input type="text" id="offerDesc" class="form-control bg-body-tertiary border-secondary border-opacity-10 py-2" placeholder="Announce new offer (e.g. Free Oil Check)" required>
+                                    <button type="submit" class="btn btn-dark px-4"><i class="bi bi-broadcast me-1"></i> Publish</button>
+                                </div>
+                            </form>
+
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold text-body-emphasis mb-3 small text-uppercase opacity-75">Active Offers</h6>
+                                    <div class="list-group list-group-flush" id="offersList">
+                                        <p class="text-muted small">Loading offers...</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold text-body-emphasis mb-3 small text-uppercase opacity-75">Claimed Deals</h6>
+                                    <div class="list-group list-group-flush" id="claimedOffersList">
+                                        <p class="text-muted small">Loading claimed deals...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                </div><!-- end dashboardSection -->
+
+                <!-- Appointments Section -->
+                <div id="appointmentsSection" style="display:none;">
+                    <div class="card border-0 shadow-sm rounded-4 p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold mb-0 text-body-emphasis"><i class="bi bi-calendar-check-fill text-primary me-2"></i>Incoming Appointments</h5>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="loadOwnerAppointments()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+                        </div>
+                        <div id="ownerAppointmentsList">
+                            <p class="text-muted small">Loading appointments...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customers Section -->
+                <div id="customersSection" style="display:none;">
+                    <div class="card border-0 shadow-sm rounded-4 p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h5 class="fw-bold mb-1 text-body-emphasis"><i class="bi bi-people-fill text-success me-2"></i>Customers</h5>
+                                <p class="text-muted small mb-0">Users who have booked appointments or claimed offers from your shop.</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="loadCustomers()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+                        </div>
+                        <div id="customersList">
+                            <p class="text-muted small">Loading customers...</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0 mt-2">
+                    <h5 class="modal-title fw-bold text-body-emphasis"><i class="bi bi-shield-lock text-danger me-2"></i>Change
+                        Password</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-4">Enter a new secure password for your account.</p>
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">New Password</label>
+                            <input type="password" id="newPassword" class="form-control bg-body-secondary border-secondary border-opacity-10 py-2" required
+                                minlength="6" placeholder="At least 6 characters">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-muted small">Confirm New Password</label>
+                            <input type="password" id="confirmNewPassword" class="form-control bg-body-secondary border-secondary border-opacity-10 py-2"
+                                required placeholder="Retype new password">
+                        </div>
+                        <div id="passwordAlertBox" class="alert d-none border-0 rounded-3 small fw-medium mb-0"></div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0 mb-2 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-dark rounded-pill px-4"
+                        onclick="executeChangePassword()" id="changePwdBtn">Update Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shop Profile Modal -->
+    <div class="modal fade" id="shopProfileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0 mt-2">
+                    <h5 class="modal-title fw-bold text-body-emphasis"><i class="bi bi-person-badge text-primary me-2"></i>Shop Profile</h5>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="shopProfileForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">Shop Name</label>
+                            <input type="text" id="shopName" class="form-control bg-body-secondary border-secondary border-opacity-10 py-2" required placeholder="e.g. Mike's Auto Repair">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">Location</label>
+                            <input type="text" id="shopLocation" class="form-control bg-body-secondary border-secondary border-opacity-10 py-2" required placeholder="e.g. 123 Main St">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">Phone Number</label>
+                            <input type="tel" id="shopPhone" class="form-control bg-body-secondary border-secondary border-opacity-10 py-2" required placeholder="e.g. 555-1234">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-muted small">Professional Description</label>
+                            <textarea id="shopDesc" class="form-control bg-body-secondary border-secondary border-opacity-10 py-2" rows="3" placeholder="Describe your services..."></textarea>
+                        </div>
+                        <div id="shopProfileAlertBox" class="alert d-none border-0 rounded-3 small fw-medium mb-0"></div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0 mb-2 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-custom rounded-pill px-4"
+                        onclick="saveShopProfile()" id="saveProfileBtn">Save Profile</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase and Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Optional: Basic authentication check (redirect if not logged in)
+            // if (!window.authService || (!window.authService.isAuthenticated() && !sessionStorage.getItem('isAdmin'))) {
+            //     window.location.href = "login.html";
+            //     return;
+            // }
+
+            // Display shop owner name if available
+            const user = window.authService ? window.authService.getUser() : null;
+            if (user && document.getElementById("welcomeText")) {
+                 document.getElementById("welcomeText").innerText = "Welcome back, " + (user.email.split('@')[0]) + " 👋";
+            } else if (sessionStorage.getItem('isAdmin')) {
+                 document.getElementById("welcomeText").innerText = "Welcome back, Admin 👋";
+            }
+
+            // Logout setup
+            const doLogout = function (e) {
+                e.preventDefault();
+                sessionStorage.removeItem('isAdmin');
+                if (window.authService) window.authService.logout();
+                window.location.href = "login.html"; // Standard redirect after logout
+            };
+
+            const logoutBtn = document.getElementById("logoutBtn");
+            if (logoutBtn) logoutBtn.addEventListener("click", doLogout);
+            
+            const mobileLogoutBtn = document.getElementById("mobileLogoutBtn");
+            if (mobileLogoutBtn) mobileLogoutBtn.addEventListener("click", doLogout);
+            
+            if (window.dbService) {
+                loadShopProfile().then(() => {
+                    loadMaintenanceHistory();
+                    loadOffersList();
+                    loadClaimedOffersList();
+                });
+            }
+        });
+
+        async function loadMaintenanceHistory() {
+            const container = document.getElementById('timelineContainer');
+            try {
+                const history = await window.dbService.getMaintenanceHistory();
+                if (history.length === 0) {
+                    container.innerHTML = '<p class="text-muted small">No maintenance history recorded yet.</p>';
+                } else {
+                    container.innerHTML = history.slice(0,4).map(h => `
+                        <div class="timeline-item">
+                            <h6 class="fw-bold mb-1 text-body-emphasis">${h.type}</h6>
+                            <p class="text-muted small mb-1"><i class="bi bi-calendar me-1"></i> ${new Date(h.date).toLocaleDateString()} &middot; <span class="text-success fw-medium">$${h.cost}</span></p>
+                            <p class="small text-secondary mb-0">${h.notes || ''}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                container.innerHTML = '<p class="text-danger small">Failed to load history.</p>';
+            }
+        }
+
+        function showSection(sectionId) {
+            // All toggleable sections
+            const sections = ['dashboardSection', 'appointmentsSection', 'customersSection'];
+            sections.forEach(s => {
+                const el = document.getElementById(s);
+                if (el) el.style.display = 'none';
+            });
+
+            // Show the selected section
+            const target = document.getElementById(sectionId);
+            if (target) target.style.display = 'block';
+
+            // Update sidebar active state
+            const navMap = {
+                'dashboardSection': 'navDashboard',
+                'appointmentsSection': 'navAppointments',
+                'customersSection': 'navCustomers'
+            };
+            Object.values(navMap).forEach(id => {
+                const link = document.getElementById(id);
+                if (link) link.classList.remove('active');
+            });
+            const activeNav = navMap[sectionId];
+            if (activeNav) document.getElementById(activeNav)?.classList.add('active');
+
+            // Load data for the section
+            if (sectionId === 'appointmentsSection') loadOwnerAppointments();
+            if (sectionId === 'customersSection') loadCustomers();
+        }
+
+        async function loadCustomers() {
+            const list = document.getElementById('customersList');
+            list.innerHTML = '<p class="text-muted small"><span class="spinner-border spinner-border-sm me-2"></span>Loading customers...</p>';
+            try {
+                // Gather unique customers from appointments and claimed offers
+                const [appointments, claimedOffers] = await Promise.all([
+                    window.dbService.getAllAppointments(),
+                    window.dbService.getOwnerClaimedOffers ? window.dbService.getOwnerClaimedOffers() : Promise.resolve([])
+                ]);
+
+                // Build a unique customer map keyed by userId/userEmail
+                const customerMap = {};
+
+                appointments.forEach(appt => {
+                    const key = appt.userId || appt.userEmail;
+                    if (!customerMap[key]) {
+                        customerMap[key] = {
+                            name: appt.userName || 'Unknown',
+                            email: appt.userEmail || '—',
+                            appointmentCount: 0,
+                            dealCount: 0,
+                            lastSeen: appt.createdAt
+                        };
+                    }
+                    customerMap[key].appointmentCount++;
+                    if (appt.createdAt > customerMap[key].lastSeen) customerMap[key].lastSeen = appt.createdAt;
+                });
+
+                claimedOffers.forEach(claim => {
+                    const key = claim.userId || claim.userEmail;
+                    if (!customerMap[key]) {
+                        customerMap[key] = {
+                            name: claim.userName || claim.userEmail?.split('@')[0] || 'Unknown',
+                            email: claim.userEmail || '—',
+                            appointmentCount: 0,
+                            dealCount: 0,
+                            lastSeen: claim.claimedAt
+                        };
+                    }
+                    customerMap[key].dealCount++;
+                    if ((claim.claimedAt || 0) > customerMap[key].lastSeen) customerMap[key].lastSeen = claim.claimedAt;
+                });
+
+                const customers = Object.values(customerMap).sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+
+                if (customers.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center p-5 bg-body-tertiary rounded-4">
+                            <i class="bi bi-people fs-2 text-muted opacity-50 mb-3 d-block"></i>
+                            <p class="text-muted fw-medium mb-0">No customers yet.</p>
+                            <small class="text-muted">Customers will appear here once they book appointments or claim offers.</small>
+                        </div>`;
+                    return;
+                }
+
+                list.innerHTML = `
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-semibold small text-muted ps-3">Customer</th>
+                                    <th class="fw-semibold small text-muted text-center">Appointments</th>
+                                    <th class="fw-semibold small text-muted text-center">Deals Claimed</th>
+                                    <th class="fw-semibold small text-muted">Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            ${customers.map(c => {
+                                const initials = c.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+                                const lastDate = c.lastSeen ? new Date(c.lastSeen).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
+                                return `
+                                <tr>
+                                    <td class="ps-3 py-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width:40px;height:40px;font-size:0.85em;flex-shrink:0;">${initials}</div>
+                                            <div>
+                                                <div class="fw-semibold text-body-emphasis">${c.name}</div>
+                                                <small class="text-muted">${c.email}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-pill">${c.appointmentCount}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-pill">${c.dealCount}</span>
+                                    </td>
+                                    <td><small class="text-muted">${lastDate}</small></td>
+                                </tr>`;
+                            }).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = '<p class="text-danger small">Failed to load customers.</p>';
+            }
+        }
+
+        function getApptStatusBadge(status) {
+            const map = {
+                pending:  { cls: 'bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25',   icon: 'bi-hourglass-split',  label: 'Pending' },
+                confirmed:{ cls: 'bg-success bg-opacity-10 text-success border border-success border-opacity-25',   icon: 'bi-check-circle-fill',label: 'Confirmed' },
+                completed:{ cls: 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25',   icon: 'bi-star-fill',        label: 'Completed' },
+                cancelled:{ cls: 'bg-danger  bg-opacity-10 text-danger  border border-danger  border-opacity-25',   icon: 'bi-x-circle-fill',    label: 'Cancelled' }
+            };
+            const s = map[status] || map['pending'];
+            return `<span class="badge ${s.cls} mb-1" style="font-size:0.7em;"><i class="bi ${s.icon} me-1"></i>${s.label}</span>`;
+        }
+
+        async function loadOwnerAppointments() {
+            const list = document.getElementById('ownerAppointmentsList');
+            list.innerHTML = '<p class="text-muted small"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</p>';
+            try {
+                const appointments = await window.dbService.getAllAppointments();
+                if (appointments.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center p-5 bg-body-tertiary rounded-4">
+                            <i class="bi bi-calendar2-x fs-2 text-muted opacity-50 mb-3 d-block"></i>
+                            <p class="text-muted fw-medium mb-0">No appointment requests yet.</p>
+                        </div>`;
+                    return;
+                }
+
+                list.innerHTML = '';
+                appointments.forEach(appt => {
+                    const d = new Date(appt.createdAt);
+                    const formattedDate = new Date(appt.date).toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+                    const actionBtns = appt.status === 'pending' ? `
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-sm btn-success rounded-pill px-3 fw-medium" onclick="updateApptStatus('${appt.id}','confirmed')">
+                                <i class="bi bi-check-circle me-1"></i>Confirm
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-medium" onclick="updateApptStatus('${appt.id}','cancelled')">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </button>
+                        </div>` : appt.status === 'confirmed' ? `
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-sm btn-primary rounded-pill px-3 fw-medium" onclick="updateApptStatus('${appt.id}','completed')">
+                                <i class="bi bi-star me-1"></i>Mark Completed
+                            </button>
+                        </div>` : '';
+
+                    list.innerHTML += `
+                        <div class="list-group-item border-0 border-bottom border-secondary border-opacity-10 px-0 py-3">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                <div>
+                                    ${getApptStatusBadge(appt.status)}
+                                    <h6 class="fw-bold text-body-emphasis mb-1">${appt.service}</h6>
+                                    <div class="d-flex flex-wrap gap-3 mb-1">
+                                        <small class="text-muted"><i class="bi bi-person-fill me-1 text-primary"></i><strong>${appt.userName}</strong> &middot; ${appt.userEmail}</small>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>${formattedDate} at ${appt.time}</small>
+                                        <small class="text-muted"><i class="bi bi-car-front me-1"></i>${appt.vehicleInfo}</small>
+                                    </div>
+                                    ${appt.notes ? `<small class="text-muted d-block mt-1"><i class="bi bi-chat-left-text me-1"></i>${appt.notes}</small>` : ''}
+                                    ${actionBtns}
+                                </div>
+                                <small class="text-muted">Requested: ${d.toLocaleDateString()}</small>
+                            </div>
+                        </div>`;
+                });
+
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = '<p class="text-danger small">Failed to load appointments.</p>';
+            }
+        }
+
+        async function updateApptStatus(id, status) {
+            try {
+                await window.dbService.updateAppointmentStatus(id, status);
+                loadOwnerAppointments();
+            } catch (err) {
+                alert('Failed to update appointment: ' + err.message);
+            }
+        }
+
+        async function loadOffersList() {
+            const list = document.getElementById('offersList');
+            try {
+                const user = window.authService.getUser();
+                const allOffers = await window.dbService.getOffers();
+                const offers = allOffers.filter(o => o.ownerId === user.uid);
+                list.innerHTML = '';
+                if (offers.length === 0) {
+                    list.innerHTML = '<p class="text-muted small">No active promotions available right now.</p>';
+                    return;
+                }
+
+                offers.forEach(offer => {
+                    const d = new Date(offer.timestamp || Date.now());
+                    const statusBadge = offer.status === 'approved' 
+                        ? '<span class="badge bg-success bg-opacity-10 text-success mb-1 border border-success border-opacity-25" style="font-size: 0.65em;">Approved</span>'
+                        : '<span class="badge bg-warning bg-opacity-10 text-warning mb-1 border border-warning border-opacity-25" style="font-size: 0.65em;">Pending</span>';
+                    
+                    list.innerHTML += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom border-secondary border-opacity-10 hover-lift bg-transparent">
+                            <div>
+                                ${statusBadge}
+                                <div class="fw-bold text-body-emphasis mb-1">${offer.description}</div>
+                                <small class="text-muted">Created: ${d.toLocaleDateString()} at ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill fw-medium" title="Remove Offer" onclick="deleteOfferAction('${offer.id}')">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error(err);
+                if(list) list.innerHTML = '<p class="text-danger small">Failed to retrieve offers.</p>';
+            }
+        }
+
+        async function handleOfferSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('offerDesc');
+            const desc = input.value.trim();
+            if (!desc) return;
+
+            try {
+                let shopName = window.currentShopName;
+                if (!shopName && window.authService) {
+                    const user = window.authService.getUser();
+                    if (user && user.email) {
+                        shopName = user.email.split('@')[0];
+                    }
+                }
+                shopName = shopName || 'Unknown Shop';
+
+                await window.dbService.addOffer(desc, 'pending', shopName);
+                input.value = '';
+                loadOffersList();
+            } catch (err) {
+                alert("Failed to add offer: " + err.message);
+            }
+        }
+
+        async function loadClaimedOffersList() {
+            const list = document.getElementById('claimedOffersList');
+            try {
+                const claims = await window.dbService.getOwnerClaimedOffers();
+                list.innerHTML = '';
+                if (claims.length === 0) {
+                    list.innerHTML = '<p class="text-muted small">No deals claimed yet.</p>';
+                    return;
+                }
+
+                claims.forEach(claim => {
+                    const d = new Date(claim.claimedAt || Date.now());
+                    list.innerHTML += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-bottom border-secondary border-opacity-10 hover-lift bg-transparent">
+                            <div>
+                                <span class="badge bg-success bg-opacity-10 text-success mb-1 border border-success border-opacity-25" style="font-size: 0.65em;">Claimed</span>
+                                <div class="fw-bold text-body-emphasis mb-1">${claim.description}</div>
+                                <small class="text-muted d-block">By: <strong>${claim.userName}</strong> (${claim.userEmail})</small>
+                                <small class="text-muted">Claimed: ${d.toLocaleDateString()}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error(err);
+                if(list) list.innerHTML = '<p class="text-danger small">Failed to retrieve claimed offers.</p>';
+            }
+        }
+
+        async function deleteOfferAction(id) {
+            if (confirm('Are you sure you want to remove this offer?')) {
+                try {
+                    await window.dbService.deleteOffer(id);
+                    loadOffersList();
+                } catch (err) {
+                    alert("Error removing offer: " + err.message);
+                }
+            }
+        }
+
+        async function executeChangePassword() {
+            const pwd1 = document.getElementById('newPassword').value;
+            const pwd2 = document.getElementById('confirmNewPassword').value;
+            const alertBox = document.getElementById('passwordAlertBox');
+            const submitBtn = document.getElementById('changePwdBtn');
+
+            alertBox.classList.add('d-none');
+            alertBox.classList.remove('alert-danger', 'alert-success');
+
+            if (pwd1.length < 6) {
+                alertBox.innerText = "Password must be at least 6 characters long.";
+                alertBox.classList.add('alert-danger');
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            if (pwd1 !== pwd2) {
+                alertBox.innerText = "Passwords do not match.";
+                alertBox.classList.add('alert-danger');
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            try {
+                submitBtn.innerText = "Updating...";
+                submitBtn.disabled = true;
+                await window.authService.changePassword(pwd1);
+
+                alertBox.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Password updated successfully!';
+                alertBox.classList.add('alert-success');
+                alertBox.classList.remove('d-none');
+
+                document.getElementById('changePasswordForm').reset();
+                setTimeout(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+                    alertBox.classList.add('d-none');
+                    submitBtn.innerText = "Update Password";
+                    submitBtn.disabled = false;
+                }, 2000);
+            } catch (error) {
+                alertBox.innerText = error.message || "Failed to update password. You may need to sign out and sign in again.";
+                alertBox.classList.add('alert-danger');
+                alertBox.classList.remove('d-none');
+                submitBtn.innerText = "Update Password";
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function loadShopProfile() {
+            try {
+                const profile = await window.dbService.getShopProfile();
+                if (profile) {
+                    document.getElementById('shopName').value = profile.name || '';
+                    document.getElementById('shopLocation').value = profile.location || '';
+                    document.getElementById('shopPhone').value = profile.phone || '';
+                    document.getElementById('shopDesc').value = profile.description || '';
+                    
+                    window.currentShopName = profile.name;
+                    if (profile.name && document.getElementById("welcomeText")) {
+                        document.getElementById("welcomeText").innerText = "Welcome, " + profile.name + " 👋";
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to load profile:", error);
+            }
+        }
+
+        async function saveShopProfile() {
+            const btn = document.getElementById('saveProfileBtn');
+            const alertBox = document.getElementById('shopProfileAlertBox');
+            
+            const name = document.getElementById('shopName').value.trim();
+            const location = document.getElementById('shopLocation').value.trim();
+            const phone = document.getElementById('shopPhone').value.trim();
+            const desc = document.getElementById('shopDesc').value.trim();
+            
+            if (!name || !location || !phone) {
+                alertBox.className = 'alert alert-danger border-0 rounded-3 small fw-medium mt-3';
+                alertBox.innerText = 'Please fill in the required fields.';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving...';
+
+            try {
+                await window.dbService.updateShopProfile({
+                    name: name,
+                    location: location,
+                    phone: phone,
+                    description: desc
+                });
+                
+                alertBox.className = 'alert alert-success border-0 rounded-3 small fw-medium mt-3';
+                alertBox.innerText = 'Profile saved successfully!';
+                
+                if (document.getElementById("welcomeText")) {
+                    document.getElementById("welcomeText").innerText = "Welcome, " + name + " 👋";
+                }
+
+                setTimeout(() => {
+                    alertBox.className = 'alert d-none';
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('shopProfileModal'));
+                    if (modal) modal.hide();
+                }, 1500);
+
+            } catch (error) {
+                alertBox.className = 'alert alert-danger border-0 rounded-3 small fw-medium mt-3';
+                alertBox.innerText = 'Failed to save: ' + error.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Save Profile';
+            }
+        }
+    </script>
+</body>
+</html>
