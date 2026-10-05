@@ -38,3 +38,5 @@ Due to modern browser security (CORS) and Firebase integration, this project mus
 - `js/db.js` - Firebase Firestore logic
 - `js/auth.js` - Firebase Authentication logic
 - `style.css` - Global design system and glassmorphism styles
+
+hello
